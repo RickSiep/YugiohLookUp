@@ -1,0 +1,16 @@
+@inherits LayoutComponentBase
+
+<header>
+    <div class="brand">ARC-V <span>Pack Finder</span></div>
+    <p class="muted">Tag Force Special / local card-to-pack lookup</p>
+    <nav aria-label="Main navigation">
+        <NavLink href="" Match="NavLinkMatch.All">Card Search</NavLink>
+        <NavLink href="bulk">Bulk Lookup</NavLink>
+        <NavLink href="packs">Packs</NavLink>
+    </nav>
+</header>
+<main>
+    <OfflineStatus />
+    @Body
+</main>
+<footer>Personal-use lookup tool. No backend or external card API.</footer>

@@ -1,0 +1,57 @@
+@page "/packs"
+@page "/packs/{PackId}"
+
+<PageTitle>Packs | ARC-V Pack Finder</PageTitle>
+<h1>@(PackId is null ? "Browse packs" : "Pack details")</h1>
+<CatalogView Context="catalog">
+    @if (PackId is null)
+    {
+        <p>@catalog.Packs.Count known packs</p>
+        <div class="pack-grid">
+            @foreach (var pack in catalog.Packs)
+            {
+                <PackTile Pack="@pack"><p>@catalog.CardsIn(pack.Id).Count cards</p></PackTile>
+            }
+        </div>
+    }
+    else
+    {
+        var pack = catalog.Packs.FirstOrDefault(pack => pack.Id == PackId);
+        <a href="packs">Back to all packs</a>
+        @if (pack is null)
+        {
+            <p role="alert">This pack could not be found.</p>
+        }
+        else
+        {
+            var cards = catalog.CardsIn(pack.Id, filter);
+            <section class="selection">
+                <h2>@pack.Name</h2>
+                <AssetImage Path="@pack.ImagePath" Alt="@($"{pack.Name} pack artwork")" />
+                @if (pack.Description is not null)
+                {
+                    <p>@pack.Description</p>
+                }
+                <label for="pack-filter">Filter cards in this pack</label>
+                <input id="pack-filter" type="search" @bind="filter" @bind:event="oninput" />
+                <p role="status">@cards.Count of @catalog.CardsIn(pack.Id).Count cards</p>
+                @if (cards.Count == 0)
+                {
+                    <p>No cards match this filter.</p>
+                }
+                <ul class="card-list">
+                    @foreach (var card in cards)
+                    {
+                        <li>@card.Name</li>
+                    }
+                </ul>
+            </section>
+        }
+    }
+</CatalogView>
+
+@code {
+    [Parameter] public string? PackId { get; set; }
+    private string filter = "";
+    protected override void OnParametersSet() => filter = "";
+}

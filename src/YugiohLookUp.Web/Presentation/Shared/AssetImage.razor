@@ -1,0 +1,34 @@
+<img src="@source" alt="@Alt" width="@Width" height="@Height" loading="lazy"
+     class="@CssClass" @onerror="ImageFailed" />
+@if (failed)
+{
+    <span class="muted" role="status">Artwork unavailable.</span>
+}
+
+@code {
+    [Parameter] public string? Path { get; set; }
+    [Parameter, EditorRequired] public string Alt { get; set; } = "";
+    [Parameter] public int Width { get; set; } = 180;
+    [Parameter] public int Height { get; set; } = 240;
+    [Parameter] public string CssClass { get; set; } = "pack-image";
+    private string? previousPath;
+    private string source = "assets/placeholder.svg";
+    private bool failed;
+
+    protected override void OnParametersSet()
+    {
+        if (previousPath != Path)
+        {
+            previousPath = Path;
+            source = Path ?? "assets/placeholder.svg";
+            failed = false;
+        }
+    }
+
+    private void ImageFailed()
+    {
+        failed = true;
+        if (source != "assets/placeholder.svg")
+            source = "assets/placeholder.svg";
+    }
+}

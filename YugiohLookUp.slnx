@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YugiohLookUp.Core/YugiohLookUp.Core.csproj" />
+    <Project Path="src/YugiohLookUp.Web/YugiohLookUp.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YugiohLookUp.Tests/YugiohLookUp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/YugiohLookUp.Import/YugiohLookUp.Import.csproj" />
+  </Folder>
+</Solution>

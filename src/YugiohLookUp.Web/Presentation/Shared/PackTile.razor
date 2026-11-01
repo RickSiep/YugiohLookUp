@@ -1,0 +1,12 @@
+<article class="pack-tile">
+    <a href="@($"packs/{Uri.EscapeDataString(Pack.Id)}")">
+        <AssetImage Path="@Pack.ImagePath" Alt="@($"{Pack.Name} pack artwork")" />
+        <h3>@Pack.Name</h3>
+    </a>
+    @ChildContent
+</article>
+
+@code {
+    [Parameter, EditorRequired] public Pack Pack { get; set; } = default!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

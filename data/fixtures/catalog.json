@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "demo-1",
+  "source": "Synthetic development fixture. These cards, packs, and relationships are invented, not game data.",
+  "isDemo": true,
+  "cards": [
+    { "id": "demo-spark", "name": "Demo Spark Knight", "aliases": ["Demo Electric Knight"] },
+    { "id": "demo-dragon", "name": "Demo Dragon", "aliases": [] },
+    { "id": "demo-number", "name": "Demo Number 2", "aliases": [] },
+    { "id": "demo-twin-a", "name": "Demo: Twin", "aliases": [] },
+    { "id": "demo-twin-b", "name": "Demo Twin", "aliases": [] },
+    { "id": "demo-unknown", "name": "Demo Uncatalogued Mage", "aliases": [] }
+  ],
+  "packs": [
+    { "id": "demo-a", "name": "Demo Pack A", "imagePath": "assets/placeholder.svg", "description": "Synthetic pack. Real in-game artwork is not available yet." },
+    { "id": "demo-b", "name": "Demo Pack B", "imagePath": "assets/placeholder.svg", "description": "Synthetic pack used to demonstrate multiple-pack lookup." }
+  ],
+  "cardPacks": [
+    { "cardId": "demo-spark", "packId": "demo-a" },
+    { "cardId": "demo-spark", "packId": "demo-b" },
+    { "cardId": "demo-dragon", "packId": "demo-b" },
+    { "cardId": "demo-number", "packId": "demo-a" },
+    { "cardId": "demo-twin-a", "packId": "demo-a" },
+    { "cardId": "demo-twin-b", "packId": "demo-b" }
+  ]
+}

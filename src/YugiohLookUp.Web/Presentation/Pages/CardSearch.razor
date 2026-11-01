@@ -1,0 +1,60 @@
+@page "/"
+
+<PageTitle>Card Search | ARC-V Pack Finder</PageTitle>
+<h1>Find a card's packs</h1>
+<p class="muted">Search a card name, then select it to see every known pack.</p>
+<CatalogView Context="catalog">
+    <label for="card-search">Card name</label>
+    <input id="card-search" type="search" placeholder="Start typing a card name..." autocomplete="off"
+           @bind="query" @bind:event="oninput" @bind:after="ClearSelection" />
+    @if (!string.IsNullOrWhiteSpace(query))
+    {
+        var results = catalog.Search(query);
+        <p role="status">@results.TotalCount matching cards</p>
+        @if (results.TotalCount == 0)
+        {
+            <p>No matching card was found in this dataset.</p>
+        }
+        else
+        {
+            <ul class="results">
+                @foreach (var card in results.Cards)
+                {
+                    <li><button class="card-choice" @onclick="() => selected = card">@card.Name</button></li>
+                }
+            </ul>
+            @if (results.TotalCount > results.Cards.Count)
+            {
+                <p class="muted">Showing the first @results.Cards.Count results. Refine your search to see other matches.</p>
+            }
+        }
+    }
+    @if (selected is not null)
+    {
+        var packs = catalog.PacksFor(selected.Id);
+        <section aria-label="Selected card" class="selection">
+            <h2>@selected.Name</h2>
+            @if (selected.ImagePath is not null)
+            {
+                <AssetImage Path="@selected.ImagePath" Alt="@selected.Name" />
+            }
+            <p>@packs.Count known packs contain this card.</p>
+            @if (packs.Count == 0)
+            {
+                <p class="notice">No pack relationships are known for this card. The catalog may be incomplete.</p>
+            }
+            <div class="pack-grid">
+                @foreach (var pack in packs)
+                {
+                    <PackTile Pack="@pack" />
+                }
+            </div>
+        </section>
+    }
+</CatalogView>
+
+@code {
+    private string query = "";
+    private Card? selected;
+    private void ClearSelection() => selected = null;
+}

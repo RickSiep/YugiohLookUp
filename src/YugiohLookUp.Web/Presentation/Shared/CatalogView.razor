@@ -1,0 +1,46 @@
+@inject CatalogStore Store
+
+@if (catalog is not null)
+{
+    @if (catalog.IsDemo)
+    {
+        <aside class="notice" role="note">
+            <strong>Demo data only.</strong> These invented cards and packs are not game information.
+            Full source data and in-game artwork have not been supplied.
+        </aside>
+    }
+    @ChildContent(catalog)
+}
+else if (error is not null)
+{
+    <div class="notice error" role="alert">
+        <p>The local catalog could not be loaded: @error</p>
+        <button @onclick="Retry">Retry loading</button>
+    </div>
+}
+else
+{
+    <p role="status">Loading local card catalog...</p>
+}
+
+@code {
+    [Parameter, EditorRequired] public RenderFragment<Catalog> ChildContent { get; set; } = default!;
+    private Catalog? catalog;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => Load(false);
+    private Task Retry() => Load(true);
+
+    private async Task Load(bool retry)
+    {
+        error = null;
+        try
+        {
+            catalog = await (retry ? Store.RetryAsync() : Store.LoadAsync());
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException or IOException or InvalidDataException or TaskCanceledException)
+        {
+            error = exception.Message;
+        }
+    }
+}

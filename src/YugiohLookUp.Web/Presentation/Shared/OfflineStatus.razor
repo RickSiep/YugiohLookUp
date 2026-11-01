@@ -1,0 +1,84 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ILogger<OfflineStatus> Logger
+
+<div class="offline-status" role="status">
+    @message
+    @if (failed)
+    {
+        <button @onclick="RetryAsync" disabled="@repairing">@(repairing ? "Recaching..." : "Retry offline caching")</button>
+    }
+</div>
+
+@code {
+    private string message = "Checking offline availability...";
+    private IJSObjectReference? module;
+    private readonly CancellationTokenSource cancellation = new();
+    private Task? monitoring;
+    private bool failed;
+    private bool repairing;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./offline-status.js");
+            await RefreshAsync();
+            monitoring = MonitorAsync();
+        }
+        catch (JSException exception)
+        {
+            Logger.LogError(exception, "Offline monitoring could not start");
+            message = "Offline status unavailable. Reload while online to retry.";
+            StateHasChanged();
+        }
+    }
+
+    private async Task RetryAsync()
+    {
+        repairing = true;
+        await RefreshAsync(true);
+        repairing = false;
+    }
+
+    private async Task RefreshAsync(bool repair = false)
+    {
+        if (module is null) return;
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+            var status = await module.InvokeAsync<CacheStatus>("getStatus", timeout.Token, [repair]);
+            message = status.Message;
+            failed = status.Failed;
+        }
+        catch (Exception exception) when (exception is JSException or TaskCanceledException)
+        {
+            Logger.LogError(exception, "Offline cache verification failed");
+            message = "Offline cache check failed. Stay online and retry.";
+            failed = true;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task MonitorAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellation.Token))
+                if (!failed) await RefreshAsync();
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await cancellation.CancelAsync();
+        if (monitoring is not null) await monitoring;
+        if (module is not null) await module.DisposeAsync();
+        cancellation.Dispose();
+    }
+
+    public sealed record CacheStatus(string Message, bool Failed);
+}

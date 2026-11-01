@@ -1,0 +1,89 @@
+@page "/bulk"
+
+<PageTitle>Bulk Lookup | ARC-V Pack Finder</PageTitle>
+<h1>Look up a deck list</h1>
+<p class="muted">One card per line. Quantities: Name x2, Name 2, 2 Name, or 2x Name. Missing quantities mean one copy.</p>
+<CatalogView Context="catalog">
+    <label for="deck-list">Deck list</label>
+    <textarea id="deck-list" rows="10" placeholder="Dark Magician&#10;Shaddoll Beast x2"
+              @bind="text" @bind:event="oninput" @bind:after="ClearResults"></textarea>
+    <button @onclick="() => Lookup(catalog)" disabled="@string.IsNullOrWhiteSpace(text)">Find relevant packs</button>
+    @if (result is not null)
+    {
+        <section class="selection">
+            <h2>Lookup results</h2>
+            <p role="status">@result.Matched.Count distinct matched cards / @result.Issues.Count lines need attention</p>
+            @if (result.Issues.Count > 0)
+            {
+                <h3>Unmatched, ambiguous, or invalid lines</h3>
+                <ul class="issues">
+                    @foreach (var issue in result.Issues)
+                    {
+                        <li>
+                            <strong>Line @issue.Line.LineNumber:</strong> @issue.Line.Original
+                            <p>@issue.Message</p>
+                            @foreach (var candidate in issue.Candidates)
+                            {
+                                <button @onclick="() => Choose(catalog, issue.Line.LineNumber, candidate.Id)">Use @candidate.Name</button>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+            @if (result.Matched.Count > 0)
+            {
+                <h3>Matched cards</h3>
+                <ul class="card-list">
+                    @foreach (var item in result.Matched)
+                    {
+                        <li>@item.Card.Name <span class="quantity">x@(item.Quantity)</span></li>
+                    }
+                </ul>
+            }
+            @if (result.WithoutPacks.Count > 0)
+            {
+                <div class="notice">
+                    <strong>Matched cards with no known pack:</strong>
+                    @string.Join(", ", result.WithoutPacks.Select(item => item.Card.Name))
+                </div>
+            }
+            <h3>Relevant packs</h3>
+            <p class="muted">Counts describe requested deck coverage, not guaranteed drops or how many packs to buy.</p>
+            @if (result.Packs.Count == 0)
+            {
+                <p>No relevant pack relationships were found.</p>
+            }
+            <div class="pack-grid">
+                @foreach (var group in result.Packs)
+                {
+                    <PackTile Pack="@group.Pack">
+                        <p><strong>@group.DistinctCards distinct cards / @group.RequestedCopies requested copies</strong></p>
+                        <ul class="card-list">
+                            @foreach (var item in group.Cards)
+                            {
+                                <li>@item.Card.Name <span class="quantity">x@(item.Quantity)</span></li>
+                            }
+                        </ul>
+                    </PackTile>
+                }
+            </div>
+        </section>
+    }
+</CatalogView>
+
+@code {
+    private string text = "";
+    private DeckLookupResult? result;
+    private readonly Dictionary<int, string> choices = [];
+    private void ClearResults()
+    {
+        choices.Clear();
+        result = null;
+    }
+    private void Lookup(Catalog catalog) => result = DeckLookup.Lookup(text, catalog, choices);
+    private void Choose(Catalog catalog, int line, string id)
+    {
+        choices[line] = id;
+        Lookup(catalog);
+    }
+}
